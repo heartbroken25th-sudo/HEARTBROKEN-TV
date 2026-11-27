@@ -18,25 +18,38 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.SubcomposeAsyncImage
 import com.heartbroken.tv.data.model.Channel
 import com.heartbroken.tv.ui.theme.Gold
 import com.heartbroken.tv.ui.theme.Obsidian700
@@ -52,6 +65,7 @@ fun LiveTvScreen(
     viewModel: LiveTvViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = modifier
@@ -62,6 +76,7 @@ fun LiveTvScreen(
                 )
             )
     ) {
+        // Header & Search
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
             Text(
                 text = "HEARTBROKEN TV",
@@ -76,11 +91,35 @@ fun LiveTvScreen(
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "All available television channels.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary
+            Spacer(Modifier.height(16.dp))
+            
+            // Search Bar
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = viewModel::onSearchQueryChanged,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Search channels...", color = TextSecondary) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Gold) },
+                trailingIcon = {
+                    if (state.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextSecondary)
+                        }
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Gold,
+                    unfocusedBorderColor = Obsidian700,
+                    focusedContainerColor = Obsidian800,
+                    unfocusedContainerColor = Obsidian800,
+                    cursorColor = Gold,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
 
@@ -101,7 +140,7 @@ fun LiveTvScreen(
                     onRetry = viewModel::loadChannels
                 )
                 state.isEmpty -> EmptyState(
-                    hasFilters = state.selectedCountry != null || state.selectedCategory != null,
+                    hasFilters = state.selectedCountry != null || state.selectedCategory != null || state.searchQuery.isNotEmpty(),
                     onClearFilters = viewModel::clearFilters
                 )
                 else -> ChannelGrid(
@@ -202,6 +241,7 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Coil Image Loading with fallback to initials
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -209,13 +249,20 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
                 .background(Obsidian700, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = channel.name.take(2).uppercase(),
-                style = MaterialTheme.typography.headlineMedium,
-                color = Gold,
-                fontWeight = FontWeight.Bold
-            )
+            if (channel.logoUrl != null) {
+                SubcomposeAsyncImage(
+                    model = channel.logoUrl,
+                    contentDescription = channel.name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                    loading = { CircularProgressIndicator(color = Gold, modifier = Modifier.height(24.dp)) },
+                    error = { FallbackLogo(channel.name) }
+                )
+            } else {
+                FallbackLogo(channel.name)
+            }
         }
+        
         Spacer(Modifier.height(12.dp))
         Text(
             text = channel.name,
@@ -232,6 +279,16 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
             color = TextSecondary
         )
     }
+}
+
+@Composable
+private fun FallbackLogo(name: String) {
+    Text(
+        text = name.take(2).uppercase(),
+        style = MaterialTheme.typography.headlineMedium,
+        color = Gold,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 @Composable
@@ -258,7 +315,7 @@ private fun EmptyState(hasFilters: Boolean, onClearFilters: () -> Unit) {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = if (hasFilters) "Try selecting a different country or category." else "The catalog is currently empty.",
+            text = if (hasFilters) "Try adjusting your search or filters." else "The catalog is currently empty.",
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary,
             textAlign = TextAlign.Center
