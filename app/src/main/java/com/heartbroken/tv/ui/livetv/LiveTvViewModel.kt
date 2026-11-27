@@ -37,7 +37,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
         loadChannels()
     }
 
-    fun loadChannels() {
+    fun loadChannels(initialCountry: String? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = repository.getChannels()
@@ -48,14 +48,16 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                     val categories = channels.map { it.category }.distinct().sorted()
 
                     _uiState.update { currentState ->
+                        val countryToApply = initialCountry ?: currentState.selectedCountry
                         currentState.copy(
                             isLoading = false,
                             allChannels = channels,
                             availableCountries = countries,
                             availableCategories = categories,
+                            selectedCountry = countryToApply,
                             filteredChannels = applyFilters(
                                 channels,
-                                currentState.selectedCountry,
+                                countryToApply,
                                 currentState.selectedCategory,
                                 currentState.searchQuery
                             )
@@ -64,10 +66,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                 },
                 onFailure = { error ->
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Could not load channels."
-                        )
+                        it.copy(isLoading = false, errorMessage = error.message ?: "Could not load channels.")
                     }
                 }
             )
@@ -78,12 +77,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.update { currentState ->
             currentState.copy(
                 selectedCountry = country,
-                filteredChannels = applyFilters(
-                    currentState.allChannels,
-                    country,
-                    currentState.selectedCategory,
-                    currentState.searchQuery
-                )
+                filteredChannels = applyFilters(currentState.allChannels, country, currentState.selectedCategory, currentState.searchQuery)
             )
         }
     }
@@ -92,12 +86,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.update { currentState ->
             currentState.copy(
                 selectedCategory = category,
-                filteredChannels = applyFilters(
-                    currentState.allChannels,
-                    currentState.selectedCountry,
-                    category,
-                    currentState.searchQuery
-                )
+                filteredChannels = applyFilters(currentState.allChannels, currentState.selectedCountry, category, currentState.searchQuery)
             )
         }
     }
@@ -106,12 +95,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.update { currentState ->
             currentState.copy(
                 searchQuery = query,
-                filteredChannels = applyFilters(
-                    currentState.allChannels,
-                    currentState.selectedCountry,
-                    currentState.selectedCategory,
-                    query
-                )
+                filteredChannels = applyFilters(currentState.allChannels, currentState.selectedCountry, currentState.selectedCategory, query)
             )
         }
     }
@@ -127,17 +111,11 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun applyFilters(
-        channels: List<Channel>,
-        country: String?,
-        category: String?,
-        searchQuery: String
-    ): List<Channel> {
+    private fun applyFilters(channels: List<Channel>, country: String?, category: String?, searchQuery: String): List<Channel> {
         return channels.filter { channel ->
             val matchesCountry = country == null || channel.countryName == country
             val matchesCategory = category == null || channel.category == category
             val matchesSearch = searchQuery.isBlank() || channel.name.contains(searchQuery, ignoreCase = true)
-            
             matchesCountry && matchesCategory && matchesSearch
         }
     }
