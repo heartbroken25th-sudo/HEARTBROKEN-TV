@@ -18,14 +18,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +47,7 @@ import com.heartbroken.tv.ui.theme.TextSecondary
 
 @Composable
 fun LiveTvScreen(
+    onChannelClick: (Channel) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveTvViewModel = viewModel()
 ) {
@@ -65,7 +62,6 @@ fun LiveTvScreen(
                 )
             )
     ) {
-        // Header
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
             Text(
                 text = "HEARTBROKEN TV",
@@ -88,7 +84,6 @@ fun LiveTvScreen(
             )
         }
 
-        // Filters (Only show if we have data)
         if (!state.isLoading && state.errorMessage == null && state.allChannels.isNotEmpty()) {
             FilterSection(
                 state = state,
@@ -98,7 +93,6 @@ fun LiveTvScreen(
             )
         }
 
-        // Content
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 state.isLoading -> LoadingState()
@@ -110,7 +104,10 @@ fun LiveTvScreen(
                     hasFilters = state.selectedCountry != null || state.selectedCategory != null,
                     onClearFilters = viewModel::clearFilters
                 )
-                else -> ChannelGrid(channels = state.filteredChannels)
+                else -> ChannelGrid(
+                    channels = state.filteredChannels,
+                    onChannelClick = onChannelClick
+                )
             }
         }
     }
@@ -124,7 +121,6 @@ private fun FilterSection(
     onClearFilters: () -> Unit
 ) {
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
-        // Countries
         if (state.availableCountries.isNotEmpty()) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 24.dp),
@@ -148,7 +144,6 @@ private fun FilterSection(
             Spacer(Modifier.height(8.dp))
         }
 
-        // Categories
         if (state.availableCategories.isNotEmpty()) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 24.dp),
@@ -174,7 +169,10 @@ private fun FilterSection(
 }
 
 @Composable
-private fun ChannelGrid(channels: List<Channel>) {
+private fun ChannelGrid(
+    channels: List<Channel>,
+    onChannelClick: (Channel) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
@@ -183,13 +181,16 @@ private fun ChannelGrid(channels: List<Channel>) {
         modifier = Modifier.fillMaxSize()
     ) {
         items(channels) { channel ->
-            ChannelCard(channel = channel)
+            ChannelCard(
+                channel = channel,
+                onClick = { onChannelClick(channel) }
+            )
         }
     }
 }
 
 @Composable
-private fun ChannelCard(channel: Channel) {
+private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,13 +198,10 @@ private fun ChannelCard(channel: Channel) {
                 color = Obsidian800,
                 shape = RoundedCornerShape(16.dp)
             )
-            .clickable {
-                // TODO: Launch Player in Phase 5
-            }
+            .clickable { onClick() }
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo Fallback (Since we don't have Coil yet, we use initials)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -218,9 +216,7 @@ private fun ChannelCard(channel: Channel) {
                 fontWeight = FontWeight.Bold
             )
         }
-
         Spacer(Modifier.height(12.dp))
-
         Text(
             text = channel.name,
             style = MaterialTheme.typography.titleMedium,
@@ -229,9 +225,7 @@ private fun ChannelCard(channel: Channel) {
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center
         )
-        
         Spacer(Modifier.height(4.dp))
-        
         Text(
             text = channel.category,
             style = MaterialTheme.typography.bodySmall,
