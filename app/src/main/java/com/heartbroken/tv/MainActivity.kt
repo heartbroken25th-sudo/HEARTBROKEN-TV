@@ -57,33 +57,17 @@ private fun HeartbrokenTvApp() {
 }
 
 @Composable
-private fun TvLayout(
-    navController: NavHostController,
-    deviceType: DeviceType,
-    isPlayerScreen: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Obsidian950)
-    ) {
+private fun TvLayout(navController: NavHostController, deviceType: DeviceType, isPlayerScreen: Boolean) {
+    Row(modifier = Modifier.fillMaxSize().background(Obsidian950)) {
         if (!isPlayerScreen) {
             TvNavigationRail(navController = navController)
         }
-        AppNavHost(
-            navController = navController,
-            deviceType = deviceType,
-            modifier = Modifier.fillMaxSize()
-        )
+        AppNavHost(navController = navController, deviceType = deviceType, modifier = Modifier.fillMaxSize())
     }
 }
 
 @Composable
-private fun PhoneLayout(
-    navController: NavHostController,
-    deviceType: DeviceType,
-    isPlayerScreen: Boolean
-) {
+private fun PhoneLayout(navController: NavHostController, deviceType: DeviceType, isPlayerScreen: Boolean) {
     Scaffold(
         containerColor = Obsidian950,
         bottomBar = {
@@ -95,30 +79,41 @@ private fun PhoneLayout(
         AppNavHost(
             navController = navController,
             deviceType = deviceType,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
         )
     }
 }
 
 @Composable
-private fun AppNavHost(
-    navController: NavHostController,
-    deviceType: DeviceType,
-    modifier: Modifier = Modifier
-) {
+private fun AppNavHost(navController: NavHostController, deviceType: DeviceType, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
         startDestination = Destination.Home.route,
         modifier = modifier
     ) {
         composable(Destination.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onCountryClick = { countryName ->
+                    val encodedCountry = java.net.URLEncoder.encode(countryName, "UTF-8")
+                    navController.navigate("livetv?country=$encodedCountry")
+                }
+            )
         }
         
-        composable(Destination.LiveTv.route) {
+        // Updated LiveTv route to accept an optional country argument
+        composable(
+            route = "livetv?country={country}",
+            arguments = listOf(navArgument("country") { 
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null 
+            })
+        ) { backStackEntry ->
+            val country = backStackEntry.arguments?.getString("country")?.let { 
+                if (it == "null") null else java.net.URLDecoder.decode(it, "UTF-8") 
+            }
             LiveTvScreen(
+                initialCountry = country,
                 onChannelClick = { channel ->
                     val encodedUrl = java.net.URLEncoder.encode(channel.streamUrl, "UTF-8")
                     val encodedName = java.net.URLEncoder.encode(channel.name, "UTF-8")
@@ -128,7 +123,6 @@ private fun AppNavHost(
         }
         
         composable(Destination.Settings.route) {
-            // Pass the device type to the new Adaptive Settings Screen
             SettingsScreen(deviceType = deviceType)
         }
 
