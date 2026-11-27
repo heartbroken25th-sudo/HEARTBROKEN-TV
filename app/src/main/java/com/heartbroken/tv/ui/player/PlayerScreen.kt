@@ -43,13 +43,11 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.heartbroken.tv.ui.theme.Gold
+import com.heartbroken.tv.ui.theme.Obsidian800
 import com.heartbroken.tv.ui.theme.Obsidian900
 import com.heartbroken.tv.ui.theme.Obsidian950
 import com.heartbroken.tv.ui.theme.TextSecondary
 
-/**
- * Full-screen video player screen using Media3 ExoPlayer.
- */
 @Composable
 fun PlayerScreen(
     streamUrl: String,
@@ -60,14 +58,12 @@ fun PlayerScreen(
     var isBuffering by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // 1. Initialize the ExoPlayer
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             playWhenReady = true
         }
     }
 
-    // 2. Manage the player lifecycle (Release when leaving the screen)
     DisposableEffect(Unit) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -87,7 +83,6 @@ fun PlayerScreen(
         }
     }
 
-    // 3. Load the stream URL
     LaunchedEffect(streamUrl) {
         errorMessage = null
         isBuffering = true
@@ -96,13 +91,11 @@ fun PlayerScreen(
         exoPlayer.prepare()
     }
 
-    // 4. The UI
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Obsidian950)
     ) {
-        // The actual Video View
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -118,7 +111,6 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Top Overlay (Back button + Channel Name)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -142,7 +134,6 @@ fun PlayerScreen(
             )
         }
 
-        // Loading State
         if (isBuffering && errorMessage == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -152,7 +143,6 @@ fun PlayerScreen(
             }
         }
 
-        // Error State
         if (errorMessage != null) {
             Column(
                 modifier = Modifier
@@ -179,7 +169,7 @@ fun PlayerScreen(
                     onClick = {
                         errorMessage = null
                         isBuffering = true
-                        exoPlayer.prepare() // Try to prepare again
+                        exoPlayer.prepare()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Obsidian950)
                 ) {
