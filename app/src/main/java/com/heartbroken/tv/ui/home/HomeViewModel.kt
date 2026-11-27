@@ -35,7 +35,7 @@ data class CategorySummary(
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: ChannelRepository = AssetsChannelRepository(application)
+    private val repository: ChannelRepository = M3uChannelRepository("ug")
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
