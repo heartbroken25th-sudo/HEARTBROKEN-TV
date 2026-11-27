@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +61,7 @@ import com.heartbroken.tv.ui.theme.TextSecondary
 
 @Composable
 fun LiveTvScreen(
+    initialCountry: String? = null,
     onChannelClick: (Channel) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveTvViewModel = viewModel()
@@ -67,16 +69,18 @@ fun LiveTvScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Apply the filter if the user came from the Home screen
+    LaunchedEffect(initialCountry) {
+        if (initialCountry != null) {
+            viewModel.loadChannels(initialCountry)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Obsidian950, Obsidian900)
-                )
-            )
+            .background(Brush.verticalGradient(listOf(Obsidian950, Obsidian900)))
     ) {
-        // Header & Search
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
             Text(
                 text = "HEARTBROKEN TV",
@@ -93,7 +97,6 @@ fun LiveTvScreen(
             )
             Spacer(Modifier.height(16.dp))
             
-            // Search Bar
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = viewModel::onSearchQueryChanged,
@@ -135,18 +138,12 @@ fun LiveTvScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 state.isLoading -> LoadingState()
-                state.errorMessage != null -> ErrorState(
-                    message = state.errorMessage!!,
-                    onRetry = viewModel::loadChannels
-                )
+                state.errorMessage != null -> ErrorState(state.errorMessage!!, viewModel::loadChannels)
                 state.isEmpty -> EmptyState(
                     hasFilters = state.selectedCountry != null || state.selectedCategory != null || state.searchQuery.isNotEmpty(),
                     onClearFilters = viewModel::clearFilters
                 )
-                else -> ChannelGrid(
-                    channels = state.filteredChannels,
-                    onChannelClick = onChannelClick
-                )
+                else -> ChannelGrid(state.filteredChannels, onChannelClick)
             }
         }
     }
@@ -161,10 +158,7 @@ private fun FilterSection(
 ) {
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         if (state.availableCountries.isNotEmpty()) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.availableCountries.size) { index ->
                     val country = state.availableCountries[index]
                     FilterChip(
@@ -184,10 +178,7 @@ private fun FilterSection(
         }
 
         if (state.availableCategories.isNotEmpty()) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.availableCategories.size) { index ->
                     val category = state.availableCategories[index]
                     FilterChip(
@@ -208,10 +199,7 @@ private fun FilterSection(
 }
 
 @Composable
-private fun ChannelGrid(
-    channels: List<Channel>,
-    onChannelClick: (Channel) -> Unit
-) {
+private fun ChannelGrid(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
@@ -220,10 +208,7 @@ private fun ChannelGrid(
         modifier = Modifier.fillMaxSize()
     ) {
         items(channels) { channel ->
-            ChannelCard(
-                channel = channel,
-                onClick = { onChannelClick(channel) }
-            )
+            ChannelCard(channel, onClick = { onChannelClick(channel) })
         }
     }
 }
@@ -233,15 +218,11 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = Obsidian800,
-                shape = RoundedCornerShape(16.dp)
-            )
+            .background(Obsidian800, RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Coil Image Loading with fallback to initials
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -273,11 +254,7 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(4.dp))
-        Text(
-            text = channel.category,
-            style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary
-        )
+        Text(channel.category, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
     }
 }
 
@@ -301,9 +278,7 @@ private fun LoadingState() {
 @Composable
 private fun EmptyState(hasFilters: Boolean, onClearFilters: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -322,10 +297,7 @@ private fun EmptyState(hasFilters: Boolean, onClearFilters: () -> Unit) {
         )
         if (hasFilters) {
             Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = onClearFilters,
-                colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Obsidian950)
-            ) {
+            Button(onClick = onClearFilters, colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Obsidian950)) {
                 Text("Clear Filters")
             }
         }
@@ -335,29 +307,15 @@ private fun EmptyState(hasFilters: Boolean, onClearFilters: () -> Unit) {
 @Composable
 private fun ErrorState(message: String, onRetry: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Could not load channels",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Text("Could not load channels", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
         Spacer(Modifier.height(12.dp))
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
-            textAlign = TextAlign.Center
-        )
+        Text(message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, textAlign = TextAlign.Center)
         Spacer(Modifier.height(20.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Obsidian950)
-        ) {
+        Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Obsidian950)) {
             Text("Retry")
         }
     }
