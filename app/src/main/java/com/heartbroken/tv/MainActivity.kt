@@ -107,7 +107,6 @@ private fun AppNavHost(
         }
         
         composable(Destination.LiveTv.route) {
-            // This is the part that was missing!
             LiveTvScreen(
                 onChannelClick = { channel ->
                     val encodedUrl = java.net.URLEncoder.encode(channel.streamUrl, "UTF-8")
