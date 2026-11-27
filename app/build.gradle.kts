@@ -48,7 +48,7 @@ android {
 dependencies {
     // Core Android + lifecycle
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
     // Jetpack Compose entry point
     implementation("androidx.activity:activity-compose:1.9.0")
@@ -65,8 +65,9 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Lifecycle — ViewModels and Compose-aware state collection
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
+    // Note: Pinned to 2.7.0 for stability with the Compose 2024.06.00 BOM
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
     // Tooling (only included in debug builds, never in release APKs)
     debugImplementation("androidx.compose.ui:ui-tooling")
