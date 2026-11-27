@@ -1,7 +1,10 @@
 package com.heartbroken.tv.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,27 +13,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.heartbroken.tv.ui.theme.Gold
 import com.heartbroken.tv.ui.theme.Obsidian900
 import com.heartbroken.tv.ui.theme.Obsidian950
 import com.heartbroken.tv.ui.theme.TextSecondary
 
-/**
- * HOME — country and category discovery.
- *
- * Phase 2: structural placeholder with brand styling.
- * Phase 3: real country cards, category rails, and featured sections.
- */
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = viewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -66,24 +76,34 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             color = TextSecondary
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(32.dp))
 
-        PlaceholderBlock(
-            title = "Countries",
-            body = "Country discovery grid will appear here in Phase 3."
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        PlaceholderBlock(
-            title = "TV Categories",
-            body = "Category browsing rails will appear here in Phase 3."
-        )
+        when (val s = state) {
+            is HomeUiState.Loading -> LoadingState()
+            is HomeUiState.Empty -> EmptyState()
+            is HomeUiState.Error -> ErrorState(
+                message = s.message,
+                onRetry = viewModel::loadChannels
+            )
+            is HomeUiState.Success -> SuccessState(state = s)
+        }
     }
 }
 
 @Composable
-private fun PlaceholderBlock(title: String, body: String) {
+private fun LoadingState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 64.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = Gold)
+    }
+}
+
+@Composable
+private fun EmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -91,18 +111,163 @@ private fun PlaceholderBlock(title: String, body: String) {
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(20.dp)
             )
-            .padding(24.dp)
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = title,
+            text = "No channels available yet",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "The channel catalog is empty. Channels will appear here once the catalog is populated.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ErrorState(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Could not load channels",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(20.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Gold,
+                contentColor = Obsidian950
+            )
+        ) {
+            Text("Retry")
+        }
+    }
+}
+
+@Composable
+private fun SuccessState(state: HomeUiState.Success) {
+    Column {
+        Text(
+            text = "Countries",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(Modifier.height(12.dp))
+        CountryGrid(countries = state.countries)
+
+        Spacer(Modifier.height(32.dp))
+
+        Text(
+            text = "TV Categories",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(Modifier.height(12.dp))
+        CategoryList(categories = state.categories)
+
+        Spacer(Modifier.height(32.dp))
+
+        Text(
+            text = "${state.totalChannels} channels available",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary
+        )
+    }
+}
+
+@Composable
+private fun CountryGrid(countries: List<CountrySummary>) {
+    val chunked = countries.chunked(2)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        chunked.forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { country ->
+                    CountryCard(
+                        country = country,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (row.size < 2) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CountryCard(country: CountrySummary, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(20.dp)
+    ) {
+        Text(
+            text = country.name,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
+            text = "${country.channelCount} channels",
+            style = MaterialTheme.typography.bodySmall,
             color = TextSecondary
         )
+    }
+}
+
+@Composable
+private fun CategoryList(categories: List<CategorySummary>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        categories.forEach { category ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = category.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "${category.channelCount}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Gold,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
