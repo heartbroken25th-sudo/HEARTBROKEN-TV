@@ -51,13 +51,17 @@ private fun HeartbrokenTvApp() {
     val isPlayerScreen = currentRoute?.startsWith("player") == true
 
     when (deviceType) {
-        DeviceType.TV -> TvLayout(navController, isPlayerScreen)
-        DeviceType.PHONE, DeviceType.TABLET -> PhoneLayout(navController, isPlayerScreen)
+        DeviceType.TV -> TvLayout(navController, deviceType, isPlayerScreen)
+        DeviceType.PHONE, DeviceType.TABLET -> PhoneLayout(navController, deviceType, isPlayerScreen)
     }
 }
 
 @Composable
-private fun TvLayout(navController: NavHostController, isPlayerScreen: Boolean) {
+private fun TvLayout(
+    navController: NavHostController,
+    deviceType: DeviceType,
+    isPlayerScreen: Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -68,13 +72,18 @@ private fun TvLayout(navController: NavHostController, isPlayerScreen: Boolean) 
         }
         AppNavHost(
             navController = navController,
+            deviceType = deviceType,
             modifier = Modifier.fillMaxSize()
         )
     }
 }
 
 @Composable
-private fun PhoneLayout(navController: NavHostController, isPlayerScreen: Boolean) {
+private fun PhoneLayout(
+    navController: NavHostController,
+    deviceType: DeviceType,
+    isPlayerScreen: Boolean
+) {
     Scaffold(
         containerColor = Obsidian950,
         bottomBar = {
@@ -85,6 +94,7 @@ private fun PhoneLayout(navController: NavHostController, isPlayerScreen: Boolea
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
+            deviceType = deviceType,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -95,6 +105,7 @@ private fun PhoneLayout(navController: NavHostController, isPlayerScreen: Boolea
 @Composable
 private fun AppNavHost(
     navController: NavHostController,
+    deviceType: DeviceType,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -117,7 +128,8 @@ private fun AppNavHost(
         }
         
         composable(Destination.Settings.route) {
-            SettingsScreen()
+            // Pass the device type to the new Adaptive Settings Screen
+            SettingsScreen(deviceType = deviceType)
         }
 
         composable(
