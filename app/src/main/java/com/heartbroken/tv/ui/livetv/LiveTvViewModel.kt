@@ -12,14 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * UI state for the Live TV grid.
- *
- * Contains both the full channel list and the currently filtered list. Filters
- * are applied in-memory because the catalog is small enough to keep fully
- * loaded. If the catalog grows to thousands of channels, we'll move filtering
- * into the repository (Room DB) — the UI contract will not change.
- */
 data class LiveTvUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
@@ -28,20 +20,12 @@ data class LiveTvUiState(
     val availableCountries: List<String> = emptyList(),
     val availableCategories: List<String> = emptyList(),
     val selectedCountry: String? = null,
-    val selectedCategory: String? = null
+    val selectedCategory: String? = null,
+    val searchQuery: String = ""
 ) {
     val isEmpty: Boolean get() = !isLoading && errorMessage == null && filteredChannels.isEmpty()
 }
 
-/**
- * Live TV ViewModel.
- *
- * Responsibilities:
- *  - Load all channels from the repository.
- *  - Extract available countries and categories from the actual data.
- *  - Hold current filter selections (country, category).
- *  - Recompute the filtered channel list whenever filters change.
- */
 class LiveTvViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ChannelRepository = AssetsChannelRepository(application)
@@ -69,11 +53,11 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                             allChannels = channels,
                             availableCountries = countries,
                             availableCategories = categories,
-                            // Re-apply existing filters to the new data
                             filteredChannels = applyFilters(
                                 channels,
                                 currentState.selectedCountry,
-                                currentState.selectedCategory
+                                currentState.selectedCategory,
+                                currentState.searchQuery
                             )
                         )
                     }
@@ -97,7 +81,8 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                 filteredChannels = applyFilters(
                     currentState.allChannels,
                     country,
-                    currentState.selectedCategory
+                    currentState.selectedCategory,
+                    currentState.searchQuery
                 )
             )
         }
@@ -110,7 +95,22 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                 filteredChannels = applyFilters(
                     currentState.allChannels,
                     currentState.selectedCountry,
-                    category
+                    category,
+                    currentState.searchQuery
+                )
+            )
+        }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                searchQuery = query,
+                filteredChannels = applyFilters(
+                    currentState.allChannels,
+                    currentState.selectedCountry,
+                    currentState.selectedCategory,
+                    query
                 )
             )
         }
@@ -121,6 +121,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
             currentState.copy(
                 selectedCountry = null,
                 selectedCategory = null,
+                searchQuery = "",
                 filteredChannels = currentState.allChannels
             )
         }
@@ -129,12 +130,15 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
     private fun applyFilters(
         channels: List<Channel>,
         country: String?,
-        category: String?
+        category: String?,
+        searchQuery: String
     ): List<Channel> {
         return channels.filter { channel ->
             val matchesCountry = country == null || channel.countryName == country
             val matchesCategory = category == null || channel.category == category
-            matchesCountry && matchesCategory
+            val matchesSearch = searchQuery.isBlank() || channel.name.contains(searchQuery, ignoreCase = true)
+            
+            matchesCountry && matchesCategory && matchesSearch
         }
     }
 }
