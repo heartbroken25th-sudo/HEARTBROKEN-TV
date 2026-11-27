@@ -79,6 +79,9 @@ dependencies {
     // Coil — for loading channel logos from URLs
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // OkHttp — for downloading the live M3U playlists from the internet
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     // Tooling (only included in debug builds, never in release APKs)
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
