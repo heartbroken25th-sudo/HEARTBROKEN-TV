@@ -76,6 +76,9 @@ dependencies {
     // DataStore — for saving user settings securely
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    // Coil — for loading channel logos from URLs
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     // Tooling (only included in debug builds, never in release APKs)
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
