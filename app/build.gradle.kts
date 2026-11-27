@@ -65,9 +65,12 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Lifecycle — ViewModels and Compose-aware state collection
-    // Note: Pinned to 2.7.0 for stability with the Compose 2024.06.00 BOM
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+    // Media3 ExoPlayer — video playback engine
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 
     // Tooling (only included in debug builds, never in release APKs)
     debugImplementation("androidx.compose.ui:ui-tooling")
