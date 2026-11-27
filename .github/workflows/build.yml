@@ -27,7 +27,7 @@ jobs:
           cache-read-only: false
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --refresh-dependencies=false --stacktrace
+        run: gradle assembleDebug --no-daemon --stacktrace
         env:
           GRADLE_OPTS: >-
             -Dorg.gradle.internal.repository.max.retries=5
