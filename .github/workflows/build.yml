@@ -26,8 +26,24 @@ jobs:
           gradle-version: '8.7'
           cache-read-only: false
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Build debug APK (with retry against transient 429s)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            echo "=========================================="
+            echo "=== Build attempt $attempt of 5 ==="
+            echo "=========================================="
+            if gradle assembleDebug --no-daemon --stacktrace; then
+              echo "✅ Build succeeded on attempt $attempt"
+              exit 0
+            fi
+            if [ $attempt -lt 5 ]; then
+              WAIT=$((attempt * 30))
+              echo "⏳ Attempt $attempt failed. Waiting ${WAIT}s for Maven rate limit to reset..."
+              sleep $WAIT
+            fi
+          done
+          echo "❌ All 5 attempts failed. This is not a transient issue — check the code."
+          exit 1
         env:
           GRADLE_OPTS: >-
             -Dorg.gradle.internal.repository.max.retries=5
