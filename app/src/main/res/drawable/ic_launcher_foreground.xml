@@ -1,0 +1,81 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- GOLD GRADIENT DEFINITION -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="20" android:startY="20"
+                android:endX="88" android:endY="88"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#F4E4A8" />
+                <item android:offset="0.5" android:color="#D4AF37" />
+                <item android:offset="1.0" android:color="#8B6914" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- TV ANTENNAS -->
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M44,42 L30,24" />
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M64,42 L78,24" />
+    <path
+        android:fillColor="#F4E4A8"
+        android:pathData="M30,24 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+    <path
+        android:fillColor="#F4E4A8"
+        android:pathData="M78,24 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+
+    <!-- TV BODY (OUTER FRAME) -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M28,44 C28,39.6 31.6,36 36,36 L72,36 C76.4,36 80,39.6 80,44 L80,68 C80,72.4 76.4,76 72,76 L36,76 C31.6,76 28,72.4 28,68 Z" />
+
+    <!-- TV SCREEN (INNER BLACK) -->
+    <path
+        android:fillColor="#050505"
+        android:pathData="M34,42 C34,41.4 34.4,41 35,41 L73,41 C73.6,41 74,41.4 74,42 L74,66 C74,66.6 73.6,67 73,67 L35,67 C34.4,67 34,66.6 34,66 Z" />
+
+    <!-- DIALS ON THE RIGHT -->
+    <path
+        android:fillColor="#8B6914"
+        android:pathData="M77,45 m-1.5,0 a1.5,1.5 0,1 1,3 0 a1.5,1.5 0,1 1,-3 0" />
+    <path
+        android:fillColor="#8B6914"
+        android:pathData="M77,53 m-1.5,0 a1.5,1.5 0,1 1,3 0 a1.5,1.5 0,1 1,-3 0" />
+
+    <!-- THE PLAY BUTTON -->
+    <path
+        android:fillColor="#F4E4A8"
+        android:pathData="M48,48 L48,60 L60,54 Z" />
+
+    <!-- THE DYNAMIC SWOOSH RIBBON -->
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M20,60 C15,75 40,82 70,80 C85,79 90,70 88,60 C86,50 75,54 65,58" />
+        
+    <!-- RIBBON TAIL -->
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M20,60 C18,50 25,45 35,45" />
+
+    <!-- STYLIZED 'H' FOR HEARTBROKEN -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M48,84 L51,84 L51,88 L54,88 L54,84 L57,84 L57,92 L54,92 L54,90 L51,90 L51,92 L48,92 Z" />
+</vector>
