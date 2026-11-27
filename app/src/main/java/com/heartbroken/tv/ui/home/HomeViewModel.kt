@@ -11,17 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * All possible states of the Home discovery screen.
- *
- * [Empty] and [Error] are deliberately distinct:
- *  - Empty = catalog is genuinely empty (valid, expected on first launch)
- *  - Error = loading failed (network, malformed file, missing asset)
- *
- * Conflating the two is a common mistake that results in "no channels" being
- * displayed when the data source is actually broken. Keeping them separate
- * means the UI can tell the user the truth.
- */
 sealed interface HomeUiState {
     data object Loading : HomeUiState
     data object Empty : HomeUiState
@@ -33,32 +22,17 @@ sealed interface HomeUiState {
     ) : HomeUiState
 }
 
-/**
- * A country derived from the actual channel catalog.
- * Never created manually — always computed from real channel data.
- */
 data class CountrySummary(
     val code: String,
     val name: String,
     val channelCount: Int
 )
 
-/**
- * A category derived from the actual channel catalog.
- */
 data class CategorySummary(
     val name: String,
     val channelCount: Int
 )
 
-/**
- * Home discovery ViewModel.
- *
- * Loads channels from the repository once on creation and exposes the result as
- * a [StateFlow]. The Compose UI collects this state and renders the matching
- * screen. Retry is exposed as a public method — nothing about the state machine
- * is hidden from the UI.
- */
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ChannelRepository = AssetsChannelRepository(application)
@@ -70,9 +44,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         loadChannels()
     }
 
-    /**
-     * Reloads the channel catalog. Safe to call from a retry button.
-     */
     fun loadChannels() {
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
@@ -90,9 +61,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 },
                 onFailure = { error ->
-                    HomeUiState.Error(
-                        error.message ?: "Could not load channels."
-                    )
+                    HomeUiState.Error(error.message ?: "Could not load channels.")
                 }
             )
         }
