@@ -73,6 +73,9 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
 
+    // DataStore — for saving user settings securely
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Tooling (only included in debug builds, never in release APKs)
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
