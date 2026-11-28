@@ -49,31 +49,25 @@ class M3uChannelRepository(
                 trimmed.startsWith("#EXTINF:") -> {
                     skipCurrent = false
                     
-                    // Extract Name
                     val nameMatch = Regex(",(.*)$").find(trimmed)
                     currentName = nameMatch?.groupValues?.get(1)?.trim() ?: "Unknown"
                     
-                    // Skip if marked as Not 24/7
                     if (currentName.contains("[Not 24/7]", ignoreCase = true)) {
                         skipCurrent = true
                     }
 
-                    // Extract Logo
                     val logoMatch = Regex("tvg-logo=\"(.*?)\"").find(trimmed)
                     currentLogo = logoMatch?.groupValues?.get(1)?.takeIf { it.isNotBlank() }
 
-                    // Extract Category (Group)
                     val groupMatch = Regex("group-title=\"(.*?)\"").find(trimmed)
                     currentGroup = groupMatch?.groupValues?.get(1)?.takeIf { it.isNotBlank() } ?: "General"
 
-                    // Extract ID
                     val idMatch = Regex("tvg-id=\"(.*?)\"").find(trimmed)
                     currentId = idMatch?.groupValues?.get(1)?.takeIf { it.isNotBlank() } ?: currentName
                 }
                 
                 trimmed.startsWith("http") && currentName.isNotEmpty() -> {
                     if (!skipCurrent) {
-                        // Clean up the name (remove resolution tags like (720p))
                         val cleanName = currentName.replace(Regex("\\(\\d+p\\)"), "").trim()
                         
                         channels.add(
@@ -97,7 +91,6 @@ class M3uChannelRepository(
         return channels
     }
 
-    // Quick helper to convert "ug" to "Uganda"
     private fun getCountryName(code: String): String {
         return when (code.lowercase()) {
             "ug" -> "Uganda"
