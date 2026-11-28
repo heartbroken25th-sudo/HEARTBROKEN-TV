@@ -1,7 +1,11 @@
 package com.heartbroken.tv.ui.livetv
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,9 +41,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -69,7 +77,6 @@ fun LiveTvScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Apply the filter if the user came from the Home screen
     LaunchedEffect(initialCountry) {
         if (initialCountry != null) {
             viewModel.loadChannels(initialCountry)
@@ -215,11 +222,32 @@ private fun ChannelGrid(channels: List<Channel>, onChannelClick: (Channel) -> Un
 
 @Composable
 private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
+    // Focus state for TV remotes and keyboards
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    
+    // Animate scale and border when focused
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1f,
+        label = "scale"
+    )
+    val borderColor = if (isFocused) Gold else Color.Transparent
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .scale(scale)
             .background(Obsidian800, RoundedCornerShape(16.dp))
-            .clickable { onClick() }
+            .border(
+                width = 2.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
