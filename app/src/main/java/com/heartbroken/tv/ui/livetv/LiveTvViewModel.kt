@@ -28,7 +28,6 @@ data class LiveTvUiState(
 
 class LiveTvViewModel(application: Application) : AndroidViewModel(application) {
 
-    // USE THE NEW M3U REPOSITORY HERE
     private val repository: ChannelRepository = M3uChannelRepository("ug")
 
     private val _uiState = MutableStateFlow(LiveTvUiState())
