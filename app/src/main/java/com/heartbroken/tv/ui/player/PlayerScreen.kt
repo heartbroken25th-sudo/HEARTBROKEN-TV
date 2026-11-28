@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -84,7 +84,6 @@ fun PlayerScreen(
         }
     }
 
-    // 1. Initialize Player with a Chrome User-Agent to bypass server blocks
     val exoPlayer = remember {
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -100,7 +99,6 @@ fun PlayerScreen(
             }
     }
 
-    // 2. Manage lifecycle and player states
     DisposableEffect(Unit) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -117,12 +115,10 @@ fun PlayerScreen(
         onDispose {
             exoPlayer.removeListener(listener)
             exoPlayer.release()
-            // Reset screen orientation when leaving the player
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
-    // 3. Load stream
     LaunchedEffect(streamUrl) {
         errorMessage = null
         isBuffering = true
@@ -131,7 +127,6 @@ fun PlayerScreen(
         exoPlayer.prepare()
     }
 
-    // 4. The UI
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -139,14 +134,13 @@ fun PlayerScreen(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { showControls = !showControls } // Tap screen to toggle controls
+            ) { showControls = !showControls }
     ) {
-        // Video Surface
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     player = exoPlayer
-                    useController = false // HIDES PAUSE, FORWARD, REWIND
+                    useController = false
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
@@ -168,23 +162,24 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Watermark (Left Hand Side)
+        // Watermark (Top Right, styled like the image)
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
-                .rotate(-90f)
+                .align(Alignment.TopEnd)
+                .padding(top = 70.dp, end = 16.dp)
+                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                .border(1.dp, Gold.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(
                 text = "HEARTBROKEN TV",
-                color = Gold.copy(alpha = 0.5f),
+                color = Gold,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 4.sp
+                letterSpacing = 2.sp
             )
         }
 
-        // Loading State (Buffering / Signal Lost)
         if (isBuffering && errorMessage == null) {
             Box(
                 modifier = Modifier
@@ -196,7 +191,6 @@ fun PlayerScreen(
             }
         }
 
-        // Top Custom Controls
         if (showControls) {
             Row(
                 modifier = Modifier
@@ -206,7 +200,6 @@ fun PlayerScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: Back Button & Channel Name
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -224,7 +217,6 @@ fun PlayerScreen(
                     )
                 }
 
-                // Right: Zoom & Rotate Buttons
                 Row {
                     IconButton(onClick = { isZoomed = !isZoomed }) {
                         Icon(
@@ -234,10 +226,11 @@ fun PlayerScreen(
                         )
                     }
                     IconButton(onClick = {
-                        if (activity?.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                        // Fixed rotation logic
+                        if (activity?.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
                             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         } else {
-                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                         }
                     }) {
                         Icon(
@@ -250,7 +243,6 @@ fun PlayerScreen(
             }
         }
 
-        // Error State
         if (errorMessage != null) {
             Column(
                 modifier = Modifier
