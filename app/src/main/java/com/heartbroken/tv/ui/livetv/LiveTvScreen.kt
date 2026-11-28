@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -26,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -89,14 +90,30 @@ fun LiveTvScreen(
             .background(Brush.verticalGradient(listOf(Obsidian950, Obsidian900)))
     ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
-            Text(
-                text = "HEARTBROKEN TV",
-                style = MaterialTheme.typography.labelSmall,
-                color = Gold,
-                letterSpacing = 4.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "HEARTBROKEN TV",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Gold,
+                    letterSpacing = 4.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                // Refresh Button
+                IconButton(onClick = { viewModel.loadChannels() }) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh Playlist",
+                        tint = Gold
+                    )
+                }
+            }
+            
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = "Live TV",
                 style = MaterialTheme.typography.displaySmall,
@@ -222,11 +239,9 @@ private fun ChannelGrid(channels: List<Channel>, onChannelClick: (Channel) -> Un
 
 @Composable
 private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
-    // Focus state for TV remotes and keyboards
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     
-    // Animate scale and border when focused
     val scale by animateFloatAsState(
         targetValue = if (isFocused) 1.05f else 1f,
         label = "scale"
