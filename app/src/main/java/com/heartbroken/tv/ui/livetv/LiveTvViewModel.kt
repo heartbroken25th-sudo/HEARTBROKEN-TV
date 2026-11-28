@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.heartbroken.tv.data.model.Channel
-import com.heartbroken.tv.data.repository.ChannelRepository
 import com.heartbroken.tv.data.repository.M3uChannelRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,25 +20,31 @@ data class LiveTvUiState(
     val availableCategories: List<String> = emptyList(),
     val selectedCountry: String? = null,
     val selectedCategory: String? = null,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val selectedRegionCode: String = "ug" // Default to Uganda
 ) {
     val isEmpty: Boolean get() = !isLoading && errorMessage == null && filteredChannels.isEmpty()
 }
 
 class LiveTvViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: ChannelRepository = M3uChannelRepository("ug")
-
     private val _uiState = MutableStateFlow(LiveTvUiState())
     val uiState: StateFlow<LiveTvUiState> = _uiState.asStateFlow()
 
     init {
-        loadChannels()
+        loadChannels("ug")
     }
 
-    fun loadChannels(initialCountry: String? = null) {
+    fun changeRegion(code: String) {
+        _uiState.update { it.copy(selectedRegionCode = code, selectedCountry = null, selectedCategory = null, searchQuery = "") }
+        loadChannels(code)
+    }
+
+    fun loadChannels(regionCode: String = _uiState.value.selectedRegionCode, initialCountry: String? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            // Create a fresh repository for the selected region
+            val repository = M3uChannelRepository(regionCode)
             val result = repository.getChannels()
 
             result.fold(
@@ -66,7 +71,7 @@ class LiveTvViewModel(application: Application) : AndroidViewModel(application) 
                 },
                 onFailure = { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.message ?: "Could not load channels.")
+                        it.copy(isLoading = false, errorMessage = error.message ?: "Could not load channels for this region.")
                     }
                 }
             )
