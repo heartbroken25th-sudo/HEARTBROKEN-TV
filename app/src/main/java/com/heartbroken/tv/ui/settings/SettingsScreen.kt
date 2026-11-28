@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.heartbroken.tv.core.DeviceType
@@ -51,6 +50,7 @@ private val categories = listOf(
     "Playback",
     "Display",
     "Network",
+    "Help & Support",
     "About"
 )
 
@@ -84,9 +84,8 @@ private fun TvSettingsLayout(
         modifier = modifier
             .fillMaxSize()
             .background(Brush.horizontalGradient(listOf(Obsidian950, Obsidian900)))
-            .padding(32.dp) // TV Safe Margins
+            .padding(32.dp)
     ) {
-        // Left Rail (Categories)
         Column(
             modifier = Modifier
                 .width(280.dp)
@@ -122,7 +121,6 @@ private fun TvSettingsLayout(
 
         Spacer(Modifier.width(32.dp))
 
-        // Right Panel (Details)
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -130,13 +128,17 @@ private fun TvSettingsLayout(
                 .background(Obsidian800, RoundedCornerShape(16.dp))
                 .padding(32.dp)
         ) {
-            Text(
-                text = selectedCategory,
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.White
-            )
-            Spacer(Modifier.height(32.dp))
-            SettingsDetailsPanel(selectedCategory, state, viewModel)
+            if (selectedCategory == "Help & Support") {
+                HelpSupportScreen()
+            } else {
+                Text(
+                    text = selectedCategory,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.White
+                )
+                Spacer(Modifier.height(32.dp))
+                SettingsDetailsPanel(selectedCategory, state, viewModel)
+            }
         }
     }
 }
@@ -157,7 +159,6 @@ private fun PhoneSettingsLayout(
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Obsidian950, Obsidian900)))
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -182,7 +183,6 @@ private fun PhoneSettingsLayout(
         }
 
         if (activeDetail == null) {
-            // List of categories
             LazyColumn(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -211,9 +211,12 @@ private fun PhoneSettingsLayout(
                 }
             }
         } else {
-            // Detail Panel
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                SettingsDetailsPanel(activeDetail!!, state, viewModel)
+            if (activeDetail == "Help & Support") {
+                HelpSupportScreen()
+            } else {
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    SettingsDetailsPanel(activeDetail!!, state, viewModel)
+                }
             }
         }
     }
