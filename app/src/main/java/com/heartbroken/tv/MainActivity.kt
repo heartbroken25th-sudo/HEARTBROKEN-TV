@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +26,7 @@ import com.heartbroken.tv.core.rememberDeviceType
 import com.heartbroken.tv.navigation.Destination
 import com.heartbroken.tv.navigation.PhoneBottomBar
 import com.heartbroken.tv.navigation.TvNavigationRail
+import com.heartbroken.tv.ui.SplashScreen
 import com.heartbroken.tv.ui.home.HomeScreen
 import com.heartbroken.tv.ui.livetv.LiveTvScreen
 import com.heartbroken.tv.ui.player.PlayerScreen
@@ -35,7 +39,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             HeartbrokenTvTheme {
-                HeartbrokenTvApp()
+                var showSplash by remember { mutableStateOf(true) }
+                
+                if (showSplash) {
+                    SplashScreen(onTimeout = { showSplash = false })
+                } else {
+                    HeartbrokenTvApp()
+                }
             }
         }
     }
@@ -100,7 +110,6 @@ private fun AppNavHost(navController: NavHostController, deviceType: DeviceType,
             )
         }
         
-        // Updated LiveTv route to accept an optional country argument
         composable(
             route = "livetv?country={country}",
             arguments = listOf(navArgument("country") { 
