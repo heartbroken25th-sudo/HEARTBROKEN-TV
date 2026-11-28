@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.heartbroken.tv.R
 import com.heartbroken.tv.ui.theme.Gold
+import com.heartbroken.tv.ui.theme.Obsidian900
 import com.heartbroken.tv.ui.theme.Obsidian950
 import kotlinx.coroutines.delay
 
@@ -59,7 +60,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Obsidian950, Obsidian950, Brush.lighten(Obsidian950))
+                    colors = listOf(Obsidian950, Obsidian900)
                 )
             ),
         contentAlignment = Alignment.Center
@@ -70,12 +71,12 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 .scale(scaleAnim)
                 .alpha(alphaAnim)
         ) {
-            // Loads the custom app_icon.png you uploaded earlier
+            // Loads the pure-code vector TV icon we created earlier
             Image(
-                painter = painterResource(id = R.drawable.app_icon),
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = "Heartbroken TV Logo",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.size(180.dp)
+                modifier = Modifier.size(200.dp)
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -98,14 +99,4 @@ fun SplashScreen(onTimeout: () -> Unit) {
             )
         }
     }
-}
-
-// Helper to make a slightly lighter version of black for the bottom gradient
-private fun Brush.Companion.lighten(color: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color {
-    return androidx.compose.ui.graphics.Color(
-        red = (color.red + 0.1f).coerceAtMost(1f),
-        green = (color.green + 0.1f).coerceAtMost(1f),
-        blue = (color.blue + 0.1f).coerceAtMost(1f),
-        alpha = color.alpha
-    )
 }
