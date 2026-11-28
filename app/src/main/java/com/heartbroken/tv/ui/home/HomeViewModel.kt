@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.heartbroken.tv.data.model.Channel
-import com.heartbroken.tv.data.repository.AssetsChannelRepository
 import com.heartbroken.tv.data.repository.ChannelRepository
+import com.heartbroken.tv.data.repository.M3uChannelRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +35,7 @@ data class CategorySummary(
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
+    // USE THE NEW M3U REPOSITORY HERE
     private val repository: ChannelRepository = M3uChannelRepository("ug")
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
