@@ -35,7 +35,6 @@ data class CategorySummary(
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    // USE THE NEW M3U REPOSITORY HERE
     private val repository: ChannelRepository = M3uChannelRepository("ug")
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
